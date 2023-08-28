@@ -39,14 +39,14 @@ export const attachResToCookie = (payload: payloadType, res: Response) => {
     userId: payload.userId,
     fullName: payload.fullName,
   });
-  const oneHour = 1000 * 60 * 60;
-  const twoWeeks = oneHour * 24 * 14;
+  const twoHours = 1000 * 60 * 60 * 2;
+  const twoWeeks = twoHours * 24 * 7;
   res.cookie('accessToken', accessTokenJwt, {
     httpOnly: true,
     // secure: true,
     sameSite: 'lax',
     signed: true,
-    maxAge: oneHour,
+    expires: new Date(Date.now() + twoHours),
   });
   res.cookie('refreshToken', refreshTokenJwt, {
     httpOnly: true,
