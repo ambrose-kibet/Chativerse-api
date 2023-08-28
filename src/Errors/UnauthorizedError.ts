@@ -1,4 +1,5 @@
 import StatusCodes from 'http-status-codes';
+import CustomAPIError from './CustomAPIError';
 
 class UnauthorizedError extends CustomAPIError {
   public statusCode: number;
