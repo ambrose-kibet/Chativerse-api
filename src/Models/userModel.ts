@@ -1,9 +1,19 @@
 import mongoose from 'mongoose';
+import { Model, Schema, model } from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcryptjs';
-const { Schema } = mongoose;
 
-const userSchema = new Schema({
+export interface IUser {
+  fullName: string;
+  email: string;
+  password: string;
+  _id: mongoose.Types.ObjectId;
+}
+interface IUserMethods {
+  checkPassWord(candidatePassword: string): Promise<boolean>;
+}
+type UserModel = Model<IUser, {}, IUserMethods>;
+const userSchema = new Schema<IUser, UserModel, IUserMethods>({
   fullName: {
     type: String,
     required: [true, 'please provide full name'],
@@ -28,7 +38,6 @@ userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return;
   }
-  if (!this.password) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
