@@ -26,7 +26,7 @@ export const createrefreshToken = async (
 };
 type payloadType = {
   userId: mongoose.Types.ObjectId;
-  fullName?: string;
+  fullName: string;
   role?: string;
   refreshToken: string;
 };
