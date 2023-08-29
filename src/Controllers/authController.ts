@@ -15,7 +15,11 @@ const registerUser = async (req: Request, res: Response) => {
     { userId: user._id, fullName: user.fullName, refreshToken },
     res
   );
-  res.status(CREATED).json({ user: { userId: user._id, name: user.fullName } });
+  res
+    .status(CREATED)
+    .json({
+      user: { userId: user._id, name: user.fullName, avatar: user.avatar },
+    });
 };
 
 const loginUser = async (req: Request, res: Response) => {
@@ -39,7 +43,9 @@ const loginUser = async (req: Request, res: Response) => {
     { userId: user._id, fullName: user.fullName, refreshToken },
     res
   );
-  res.status(CREATED).json({ user: { userId: user._id, name: user.fullName } });
+  res.status(CREATED).json({
+    user: { userId: user._id, name: user.fullName, avatar: user.avatar },
+  });
 };
 
 const logOutUser = async (req: any, res: Response) => {
@@ -47,6 +53,7 @@ const logOutUser = async (req: any, res: Response) => {
   res.cookie('accessToken', 'logout', {
     httpOnly: true,
     sameSite: 'lax',
+    // rember to add secure true
     expires: new Date(Date.now()),
   });
   res.cookie('refreshToken', 'logout', {

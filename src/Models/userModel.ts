@@ -7,12 +7,13 @@ export interface IUser {
   fullName: string;
   email: string;
   password: string;
+  avatar: string;
   _id: mongoose.Types.ObjectId;
 }
 interface IUserMethods {
   checkPassWord(candidatePassword: string): Promise<boolean>;
 }
-type UserModel = Model<IUser, {}, IUserMethods>;
+export type UserModel = Model<IUser, {}, IUserMethods>;
 const userSchema = new Schema<IUser, UserModel, IUserMethods>({
   fullName: {
     type: String,
@@ -33,6 +34,11 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     required: [true, 'please provide password'],
     minlength: 6,
   },
+  avatar: {
+    type: String,
+    default:
+      'https://res.cloudinary.com/citadell/image/upload/v1693323169/chat-app/tmp-2-1693323167505_hyxzik.png',
+  },
 });
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
@@ -47,4 +53,4 @@ userSchema.methods.checkPassWord = async function (candidatePassword: string) {
   return isMatch;
 };
 
-export default mongoose.model('User', userSchema);
+export default model('User', userSchema);
