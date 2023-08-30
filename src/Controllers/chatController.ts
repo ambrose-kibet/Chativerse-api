@@ -52,7 +52,7 @@ const getAllMyChats = async (req: any, res: Response) => {
     return userChats;
   }
   const conversations = await getUserChatsWithMessages(req.user.userId);
-  res.status(200).json({ chats: conversations });
+  res.status(OK).json({ chats: conversations });
 };
 
 const getSingleChat = async (req: any, res: Response) => {

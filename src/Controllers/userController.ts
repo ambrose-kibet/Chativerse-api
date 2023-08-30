@@ -4,7 +4,7 @@ import BadRequestError from '../Errors/BadRequestError';
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
 import StatusCodes from 'http-status-codes';
-import NotFoundError from '../Errors/NotFoundError';
+import UnauthorizedError from '../Errors/UnauthorizedError';
 const { OK } = StatusCodes;
 
 const showMe = async (req: any, res: Response) => {
@@ -25,9 +25,9 @@ const getContacts = async (req: any, res: Response) => {
 const updateUser = async (req: any, res: Response) => {
   const { avatar, fullName, email } = req.body;
   if (!avatar || !fullName || !email)
-    throw new BadRequestError('Please provide fullName email and password');
+    throw new BadRequestError('Please provide fullName email and avatar');
   const user = await User.findOne({ _id: req.user.userId });
-  if (!user) throw new NotFoundError('User Not found');
+  if (!user) throw new UnauthorizedError('User Not found');
   user.email = email;
   user.avatar = avatar;
   user.fullName = fullName;
@@ -36,7 +36,10 @@ const updateUser = async (req: any, res: Response) => {
     user: { userId: user._id, name: user.fullName, avatar: user.avatar },
   });
 };
-const updateUserPassword = async (req: Request, res: Response) => {
+const updateUserPassword = async (req: any, res: Response) => {
+  const { oldPassword, newPassword } = req.body;
+  const user = User.findOne({ _id: req.user.userId });
+  if (!user) throw new UnauthorizedError('Invalid credentials');
   res.status(200).json({ msg: 'update user password route' });
 };
 const uploadImage = async (req: any, res: Response) => {
