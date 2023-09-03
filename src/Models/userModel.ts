@@ -10,7 +10,7 @@ export interface IUser {
   avatar: string;
   _id: mongoose.Types.ObjectId;
 }
-interface IUserMethods {
+export interface IUserMethods {
   checkPassWord(candidatePassword: string): Promise<boolean>;
 }
 export type UserModel = Model<IUser, {}, IUserMethods>;

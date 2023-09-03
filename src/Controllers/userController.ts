@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import User, { IUser } from '../Models/userModel';
+import User, { IUser, IUserMethods, UserModel } from '../Models/userModel';
 import BadRequestError from '../Errors/BadRequestError';
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
@@ -38,9 +38,17 @@ const updateUser = async (req: any, res: Response) => {
 };
 const updateUserPassword = async (req: any, res: Response) => {
   const { oldPassword, newPassword } = req.body;
-  const user = User.findOne({ _id: req.user.userId });
+  const user = await User.findOne({
+    _id: req.user.userId,
+  });
   if (!user) throw new UnauthorizedError('Invalid credentials');
-  res.status(200).json({ msg: 'update user password route' });
+  const isCorrect: boolean = await user.checkPassWord(oldPassword);
+  if (!isCorrect) {
+    throw new BadRequestError('invalid password');
+  }
+  user.password = newPassword;
+  await user.save();
+  res.status(OK).json({ msg: 'password updated sucessfully' });
 };
 const uploadImage = async (req: any, res: Response) => {
   const { image } = req.files;
