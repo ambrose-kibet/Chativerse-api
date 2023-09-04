@@ -7,8 +7,9 @@ import NotFoundError from '../Errors/NotFoundError';
 const { CREATED, OK } = StatusCodes;
 const createChat = async (req: any, res: Response) => {
   const { recipientId } = req.body;
-  if (!recipientId)
+  if (!recipientId) {
     throw new BadRequestError('please provide a valid recpient');
+  }
   const exist = await Chat.findOne({
     members: { $all: [req.user.userId, recipientId] },
   });
@@ -35,14 +36,6 @@ const getAllMyChats = async (req: any, res: Response) => {
       },
       {
         $match: { 'messages.0': { $exists: true } }, // Filter chats with at least one message if message at inde 0 exist retrun that chat
-      },
-      // Populate messages for each chat
-      {
-        $addFields: {
-          messages: {
-            $sort: { createdAt: 1 }, // Sort messages within each chat by createdAt
-          },
-        },
       },
       {
         $sort: { createdAt: 1 }, // Sort chats by createdAt
