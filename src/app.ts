@@ -7,12 +7,13 @@ import morgan from 'morgan';
 import expressFileUpload from 'express-fileupload';
 import cors from 'cors';
 import connectDB from './DB/connect';
-import authRouter from './Routers/authRouter';
 import notFoundMiddleware from './Middleware/notFoundMiddleware';
 import errorHandlerMiddleware from './Middleware/errorHandlerMiddleware';
-import chatRouter from './Routers/chatRouter';
 import authMidleware from './Middleware/authMiddleware';
+import authRouter from './Routers/authRouter';
+import chatRouter from './Routers/chatRouter';
 import userRouter from './Routers/userRouter';
+import messageRouter from './Routers/messageRouter';
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
@@ -41,6 +42,7 @@ app.get('/', (req, res) => {
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/chats', authMidleware, chatRouter);
 app.use('/api/v1/users', authMidleware, userRouter);
+app.use('/api/v1/messages', authMidleware, messageRouter);
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 const start = () => {
