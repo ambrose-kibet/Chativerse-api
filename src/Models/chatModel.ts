@@ -5,7 +5,6 @@ import mongoose, {
   Types,
   InferSchemaType,
 } from 'mongoose';
-import { HydratedDocument } from 'mongoose';
 
 const chatSchema = new Schema(
   {
