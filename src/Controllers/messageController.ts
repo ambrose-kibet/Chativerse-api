@@ -5,7 +5,12 @@ import StatusCodes from 'http-status-codes';
 const { CREATED, OK } = StatusCodes;
 const createMesage = async (req: any, res: Response) => {
   const { chatId, message, imageUrl, recipient } = req.body;
-  if (!chatId || !message || !recipient)
+  if (
+    !chatId ||
+    !recipient ||
+    (!message && !imageUrl) ||
+    (!imageUrl && !message)
+  )
     throw new BadRequestError('please provide chatId, recipient and message');
   const newMessage = await Message.create({
     chat: chatId,
