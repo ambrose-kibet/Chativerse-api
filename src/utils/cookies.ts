@@ -44,14 +44,14 @@ export const attachResToCookie = (payload: payloadType, res: Response) => {
   res.cookie('accessToken', accessTokenJwt, {
     httpOnly: true,
     // secure: true,
-    sameSite: 'lax',
+    sameSite: 'lax', // Adjust as needed for local development
     signed: true,
     expires: new Date(Date.now() + twoHours),
   });
   res.cookie('refreshToken', refreshTokenJwt, {
     httpOnly: true,
     // secure: true,
-    sameSite: 'lax',
+    sameSite: 'lax', // Adjust as needed for local development
     signed: true,
     expires: new Date(Date.now() + twoWeeks),
   });

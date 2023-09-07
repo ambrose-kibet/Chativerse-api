@@ -29,7 +29,7 @@ app.use(expressFileUpload({ useTempFiles: true })); // acess req.file
 app.use(express.urlencoded({ extended: true })); //req.params
 app.use(
   cors({
-    origin: ['http://localhost:5173'], //whitelist frontend clients
+    origin: 'http://localhost:5173', //whitelist frontend clients
     credentials: true,
   })
 );
