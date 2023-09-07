@@ -8,8 +8,9 @@ import UnauthorizedError from '../Errors/UnauthorizedError';
 const { OK } = StatusCodes;
 
 const showMe = async (req: any, res: Response) => {
-  const user = (await User.findOne({ _id: req.user.userId })) as IUser;
-  res.status(200).json({
+  const user = await User.findOne({ _id: req.user.userId });
+  if (!user) throw new UnauthorizedError('User Not found');
+  res.status(OK).json({
     user: { userId: user._id, name: user.fullName, avatar: user.avatar },
   });
 };
