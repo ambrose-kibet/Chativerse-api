@@ -2,16 +2,23 @@ import { Request, Response } from 'express';
 import User, { IUser, IUserMethods, UserModel } from '../Models/userModel';
 import BadRequestError from '../Errors/BadRequestError';
 import { v2 as cloudinary } from 'cloudinary';
-import fs from 'fs';
+import * as fs from 'node:fs/promises';
 import StatusCodes from 'http-status-codes';
 import UnauthorizedError from '../Errors/UnauthorizedError';
+import { attachResToCookie, createrefreshToken } from '../utils/cookies';
 const { OK } = StatusCodes;
 
 const showMe = async (req: any, res: Response) => {
-  const user = await User.findOne({ _id: req.user.userId });
+  const user = await User.findOne({ _id: req.user.userId }).select(
+    'fullName email avatar '
+  );
   if (!user) throw new UnauthorizedError('User Not found');
   res.status(OK).json({
-    user: { userId: user._id, name: user.fullName, avatar: user.avatar },
+    user: {
+      name: user.fullName,
+      avatar: user.avatar,
+      email: user.email,
+    },
   });
 };
 const getContacts = async (req: any, res: Response) => {
@@ -33,6 +40,11 @@ const updateUser = async (req: any, res: Response) => {
   user.avatar = avatar;
   user.fullName = fullName;
   await user.save();
+  const refreshToken = await createrefreshToken(req, user._id);
+  attachResToCookie(
+    { userId: user._id, fullName: user.fullName, refreshToken },
+    res
+  );
   res.status(OK).json({
     user: { userId: user._id, name: user.fullName, avatar: user.avatar },
   });
@@ -45,7 +57,7 @@ const updateUserPassword = async (req: any, res: Response) => {
   if (!user) throw new UnauthorizedError('Invalid credentials');
   const isCorrect: boolean = await user.checkPassWord(oldPassword);
   if (!isCorrect) {
-    throw new BadRequestError('invalid password');
+    throw new BadRequestError('invalid old password');
   }
   user.password = newPassword;
   await user.save();
@@ -67,7 +79,9 @@ const uploadImage = async (req: any, res: Response) => {
     folder: 'chat-app',
     use_filename: true,
   });
-  fs.unlinkSync(image.tempFilePath);
+
+  await fs.unlink(image.tempFilePath);
+
   res.status(200).json({ url: result.secure_url });
 };
 
