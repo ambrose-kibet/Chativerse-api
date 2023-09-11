@@ -37,7 +37,7 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
   avatar: {
     type: String,
     default:
-      'https://res.cloudinary.com/citadell/image/upload/v1693323169/chat-app/tmp-2-1693323167505_hyxzik.png',
+      'https://res.cloudinary.com/citadell/image/upload/v1694168832/chat-app/tmp-1-1694168816045_zoctu0.png',
   },
 });
 userSchema.pre('save', async function (next) {
