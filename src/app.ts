@@ -2,6 +2,8 @@ import express from 'express';
 require('dotenv').config();
 require('express-async-errors'); // wraps handlers in try catch blocks
 const app = express();
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import expressFileUpload from 'express-fileupload';
@@ -15,7 +17,7 @@ import chatRouter from './Routers/chatRouter';
 import userRouter from './Routers/userRouter';
 import messageRouter from './Routers/messageRouter';
 import { v2 as cloudinary } from 'cloudinary';
-
+const server = http.createServer(app);
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -45,10 +47,52 @@ app.use('/api/v1/users', authMidleware, userRouter);
 app.use('/api/v1/messages', authMidleware, messageRouter);
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
-const start = () => {
+
+// socket io
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: 'http://localhost:5173', // Adjust this to match your frontend URL
+    credentials: true,
+  },
+});
+const connectedUsers = new Map<string, string>();
+
+io.on('connection', (socket) => {
+  socket.on('join', (userId) => {
+    connectedUsers.set(userId, socket.id);
+    // Notify all clients about the updated online users
+    const onlineUserIds = Array.from(connectedUsers.keys());
+    io.emit('updateOnlineUsers', onlineUserIds);
+  });
+
+  socket.on('sendMessage', (message) => {
+    const receiverSocketId = connectedUsers.get(message.recipient);
+    if (receiverSocketId) {
+      socket.to(receiverSocketId).emit('getMessage', message);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    connectedUsers.forEach((value, key) => {
+      if (value === socket.id) {
+        connectedUsers.delete(key);
+      }
+    });
+
+    // Notify all clients about the updated online users
+    const onlineUserIds = Array.from(connectedUsers.keys());
+    io.emit('updateOnlineUsers', onlineUserIds);
+    // remeber to clean up the connected users
+    console.log(connectedUsers);
+  });
+});
+
+const start = async () => {
   try {
-    connectDB(process.env.MONGO_URL!);
-    app.listen(PORT, () => console.log(`server is listening port ${PORT}...`));
+    await connectDB(process.env.MONGO_URL!);
+    server.listen(PORT, () => {
+      console.log(`Server is listening on port ${PORT}...`);
+    });
   } catch (error) {
     console.log(error);
   }
