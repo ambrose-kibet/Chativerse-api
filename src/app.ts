@@ -38,7 +38,7 @@ app.use(
 app.use(helmet()); // set security headers
 app.use(mongoSanitize()); // sanitize user input
 app.use(sanitizeUserInput); // sanitize user input prevent xss attacks
-app.use(rateLimit({ windowMs: 60 * 1000, max: 45, legacyHeaders: false })); // limit requests
+app.use(rateLimit({ windowMs: 60 * 1000, limit: 45, legacyHeaders: false })); // limit requests
 
 app.use(morgan('dev')); //logs the endpoint
 app.use(cookieParser(process.env.JWT_SECRET)); //sign cookies
