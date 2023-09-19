@@ -15,11 +15,9 @@ const registerUser = async (req: Request, res: Response) => {
     { userId: user._id, fullName: user.fullName, refreshToken },
     res
   );
-  res
-    .status(CREATED)
-    .json({
-      user: { userId: user._id, name: user.fullName, avatar: user.avatar },
-    });
+  res.status(CREATED).json({
+    user: { userId: user._id, name: user.fullName, avatar: user.avatar },
+  });
 };
 
 const loginUser = async (req: Request, res: Response) => {
@@ -53,12 +51,14 @@ const logOutUser = async (req: any, res: Response) => {
   res.cookie('accessToken', 'logout', {
     httpOnly: true,
     sameSite: 'lax',
-    // rember to add secure true
+
+    secure: true,
     expires: new Date(Date.now()),
   });
   res.cookie('refreshToken', 'logout', {
     httpOnly: true,
     sameSite: 'lax',
+    secure: true,
     expires: new Date(Date.now()),
   });
   res.status(OK).json({ msg: 'log out sucess' });
