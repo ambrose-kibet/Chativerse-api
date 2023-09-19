@@ -50,14 +50,14 @@ const logOutUser = async (req: any, res: Response) => {
   await Token.findOneAndDelete({ user: req.user.userId });
   res.cookie('accessToken', 'logout', {
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: 'none',
 
     secure: true,
     expires: new Date(Date.now()),
   });
   res.cookie('refreshToken', 'logout', {
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: 'none',
     secure: true,
     expires: new Date(Date.now()),
   });
