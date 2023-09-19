@@ -31,14 +31,14 @@ const getContacts = async (req: any, res: Response) => {
   });
 };
 const updateUser = async (req: any, res: Response) => {
-  const { avatar, fullName, email } = req.body;
-  if (!avatar || !fullName || !email)
+  const { avatar, name, email } = req.body;
+  if (!avatar || !name || !email)
     throw new BadRequestError('Please provide fullName email and avatar');
   const user = await User.findOne({ _id: req.user.userId });
   if (!user) throw new UnauthorizedError('User Not found');
   user.email = email;
   user.avatar = avatar;
-  user.fullName = fullName;
+  user.fullName = name;
   await user.save();
   const refreshToken = await createrefreshToken(req, user._id);
   attachResToCookie(
@@ -46,7 +46,12 @@ const updateUser = async (req: any, res: Response) => {
     res
   );
   res.status(OK).json({
-    user: { userId: user._id, name: user.fullName, avatar: user.avatar },
+    user: {
+      userId: user._id,
+      name: user.fullName,
+      avatar: user.avatar,
+      email: user.email,
+    },
   });
 };
 const updateUserPassword = async (req: any, res: Response) => {
