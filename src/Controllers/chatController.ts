@@ -139,14 +139,17 @@ const getSingleChat = async (req: any, res: Response) => {
   const { chatId } = req.params;
   const chat = await Chat.findOne({
     _id: chatId,
+    $or: [{ member1: req.user.userId }, { member2: req.user.userId }],
   });
-  // rember to add authorization here
   if (!chat) throw new NotFoundError(`No chat with id "${chatId}"`);
   res.status(OK).json({ chat });
 };
 const markMessagesAsRead = async (req: any, res: Response) => {
   const { chatId } = req.params;
-  const chat = await Chat.findById(chatId);
+  const chat = await Chat.findOne({
+    _id: chatId,
+    $or: [{ member1: req.user.userId }, { member2: req.user.userId }],
+  });
   if (!chat) throw new NotFoundError(`No chat with id "${chatId}"`);
   chat.unreadMessages.set(req.user.userId, 0);
   await chat.save();
