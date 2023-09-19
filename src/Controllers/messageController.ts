@@ -29,7 +29,9 @@ const getMessages = async (req: any, res: Response) => {
   const { chatId } = req.params;
   const messages = await Message.find({
     chat: chatId,
+    $or: [{ sender: req.user.userId }, { recipient: req.user.userId }],
   }).sort('createdAt');
+  // refactor this
   const chat = await Chat.findById(chatId);
   if (!chat) throw new BadRequestError('chat not found');
   chat.unreadMessages.set(req.user.userId, 0);
