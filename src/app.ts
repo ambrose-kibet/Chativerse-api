@@ -31,7 +31,7 @@ cloudinary.config({
 app.set('trust proxy', 1); // so as to use req.ip to acess ip address
 app.use(
   cors({
-    origin: 'http://localhost:5173', //whitelist frontend clients
+    origin: ['http://localhost:5173', 'https://chativerse.netlify.app'], //whitelist frontend clients
     credentials: true,
   })
 );
@@ -63,7 +63,7 @@ const server = http.createServer(app);
 // socket io
 const io = new SocketIOServer(server, {
   cors: {
-    origin: 'http://localhost:5173', // Adjust this to match your frontend URL
+    origin: ['http://localhost:5173', 'https://chativerse.netlify.app'], // Adjust this to match your frontend URL
     credentials: true,
   },
 });
