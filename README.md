@@ -57,7 +57,7 @@
 
 ### Key Features <a name="key-features"></a>
 
-- **Send Messages and mages**
+- **Send text and images**
 - **Create User**
 - **Create Chat**
 
