@@ -42,9 +42,6 @@
     "xss": "^1.0.14",
     "xss-clean": "^0.1.4"
   },
-  "engines": {
-    "node": "16.x"
-  },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
     "@types/cors": "^2.8.13",
