@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
-const connectDB = (url: string): void => {
-  mongoose.connect(url);
+const connectDB = async (url: string) => {
+  await mongoose.connect(url);
 };
 
 export default connectDB;
