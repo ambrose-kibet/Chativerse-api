@@ -72,6 +72,12 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('leave', (userId) => {
+    connectedUsers.delete(userId);
+    // Notify all clients about the updated online users
+    const onlineUserIds = Array.from(connectedUsers.keys());
+    io.emit('updateOnlineUsers', onlineUserIds);
+  });
   socket.on('disconnect', () => {
     connectedUsers.forEach((value, key) => {
       if (value === socket.id) {
@@ -83,7 +89,6 @@ io.on('connection', (socket) => {
     const onlineUserIds = Array.from(connectedUsers.keys());
     io.emit('updateOnlineUsers', onlineUserIds);
     // remeber to clean up the connected users
-    console.log(connectedUsers);
   });
 });
 
