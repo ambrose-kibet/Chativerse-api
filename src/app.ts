@@ -17,7 +17,7 @@ import chatRouter from './Routers/chatRouter';
 import userRouter from './Routers/userRouter';
 import messageRouter from './Routers/messageRouter';
 import { v2 as cloudinary } from 'cloudinary';
-const server = http.createServer(app);
+
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -48,6 +48,7 @@ app.use('/api/v1/messages', authMidleware, messageRouter);
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
+const server = http.createServer(app);
 // socket io
 const io = new SocketIOServer(server, {
   cors: {
