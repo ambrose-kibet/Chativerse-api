@@ -8,95 +8,130 @@ const { CREATED, OK } = StatusCodes;
 const createChat = async (req: any, res: Response) => {
   const { recipientId } = req.body;
   if (!recipientId) {
-    throw new BadRequestError('please provide a valid recpient');
+    throw new BadRequestError('please provide a valid recipient');
   }
-  const exist = await Chat.findOne({
-    members: { $all: [req.user.userId, recipientId] },
+
+  const userId = new Types.ObjectId(req.user.userId);
+  const recipientObjectId = new Types.ObjectId(recipientId);
+
+  const existingChat = await Chat.findOne({
+    $or: [
+      {
+        member1: userId,
+        member2: recipientObjectId,
+      },
+      {
+        member1: recipientObjectId,
+        member2: userId,
+      },
+    ],
   });
-  if (exist) {
-    res.status(CREATED).json({ chat: exist });
-    return;
+
+  if (existingChat) {
+    res.status(CREATED).json({ chat: existingChat });
+  } else {
+    const chat = await Chat.create({
+      member1: userId,
+      member2: recipientObjectId,
+    });
+    res.status(CREATED).json({ chat });
   }
-  const chat = await Chat.create({ members: [req.user.userId, recipientId] });
-  res.status(CREATED).json({ chat });
 };
+
 const getAllMyChats = async (req: any, res: Response) => {
-  async function getUserChatsWithMessages(userId: Types.ObjectId) {
-    const userChats = await Chat.aggregate([
+  const getUserChatsWithMessages = async (userId: Types.ObjectId) => {
+    const result = await Chat.aggregate([
       {
-        $match: { members: { $in: [new Types.ObjectId(userId)] } }, // Filter chats with the user as a member
-      },
-      {
-        $lookup: {
-          from: 'messages', // Join with the 'messages' collection
-          localField: '_id', // Use '_id' from the 'Chat' collection
-          foreignField: 'chat', // Match with the 'chat' field in the 'Message' collection
-          as: 'messages', // Store the joined documents in the 'messages' field
+        // Stage 1: Match chats where the user is either member1 or member2
+        $match: {
+          $or: [{ member1: userId }, { member2: userId }],
         },
       },
       {
-        $match: { 'messages.0': { $exists: true } }, // Filter chats with at least one message if message at inde 0 exist retrun that chat
-      },
-      {
-        $sort: { 'messages.createdAt': -1 }, // Sort by the most recent message's createdAt
-      },
-      {
-        $unwind: '$members', // Unwind the 'members' array
-      },
-      {
+        // Stage 2: Sort the chats by the latest created message
         $lookup: {
-          from: 'users', // Join with the 'users' collection (or replace with the actual user collection name)
-          localField: 'members',
+          // Stage 3: Perform a lookup to get messages associated with the chat
+          from: 'messages',
+          localField: '_id',
+          foreignField: 'chat',
+          as: 'messages',
+        },
+      },
+      {
+        // Stage 4: Unwind the 'messages' array
+        $unwind: {
+          path: '$messages',
+          preserveNullAndEmptyArrays: false,
+        },
+      },
+      {
+        // Stage 5: Sort the messages within each chat by createdAt in descending order
+        $sort: {
+          'messages.createdAt': -1,
+        },
+      },
+      {
+        // Stage 6: Group chats to reconstruct the documents
+        $group: {
+          _id: '$_id',
+          member1: { $first: '$member1' },
+          member2: { $first: '$member2' },
+          messages: { $push: '$messages' },
+          unreadMessages: { $first: '$unreadMessages' },
+          latestMessage: { $first: '$messages' },
+        },
+      },
+      {
+        // Stage 7: Lookup member details for member1 and member2
+        $lookup: {
+          from: 'users',
+          localField: 'member1',
           foreignField: '_id',
-          as: 'otherMembers',
+          as: 'member1Details',
         },
       },
       {
+        $lookup: {
+          from: 'users',
+          localField: 'member2',
+          foreignField: '_id',
+          as: 'member2Details',
+        },
+      },
+      {
+        // Stage 8: Project the final output with desired fields
         $project: {
           _id: 1,
+          unreadMessages: 1,
           messages: 1,
-          createdAt: 1,
-          otherMembers: {
+          latestMessage: 1,
+          member1Details: {
             _id: 1,
             fullName: 1,
             avatar: 1,
-            // Exclude the 'password' field
+          },
+          member2Details: {
+            _id: 1,
+            fullName: 1,
+            avatar: 1,
           },
         },
       },
       {
-        $group: {
-          _id: '$_id', // Group by chat _id
-          messages: { $first: '$messages' }, // Preserve messages array
-          createdAt: { $first: '$createdAt' }, // Preserve createdAt
-          otherMembers: { $push: { $arrayElemAt: ['$otherMembers', 0] } }, // Collect otherMembers
+        // Stage 9: Sort the result by the latest message's createdAt in descending order
+        $sort: {
+          'latestMessage.createdAt': -1,
         },
-      },
-      {
-        $addFields: {
-          latestMessageCreatedAt: {
-            $reduce: {
-              input: '$messages',
-              initialValue: new Date(0), // An initial date
-              in: {
-                $cond: {
-                  if: { $gt: ['$$this.createdAt', '$$value'] },
-                  then: '$$this.createdAt',
-                  else: '$$value',
-                },
-              },
-            },
-          },
-        },
-      },
-      {
-        $sort: { latestMessageCreatedAt: -1 }, // Sort by the latest message's createdAt
       },
     ]);
 
-    return userChats;
-  }
-  const conversations = await getUserChatsWithMessages(req.user.userId);
+    return result;
+  };
+
+  // Usage:
+  const userId = new Types.ObjectId(req.user.userId);
+
+  const conversations = await getUserChatsWithMessages(userId);
   res.status(OK).json({ chats: conversations });
 };
 
@@ -104,9 +139,17 @@ const getSingleChat = async (req: any, res: Response) => {
   const { chatId } = req.params;
   const chat = await Chat.findOne({
     _id: chatId,
-    members: { $in: [req.user.userId] },
   });
+  // rember to add authorization here
   if (!chat) throw new NotFoundError(`No chat with id "${chatId}"`);
   res.status(OK).json({ chat });
 };
-export { getAllMyChats, getSingleChat, createChat };
+const markMessagesAsRead = async (req: any, res: Response) => {
+  const { chatId } = req.params;
+  const chat = await Chat.findById(chatId);
+  if (!chat) throw new NotFoundError(`No chat with id "${chatId}"`);
+  chat.unreadMessages.set(req.user.userId, 0);
+  await chat.save();
+  res.status(OK).json({ chat });
+};
+export { getAllMyChats, getSingleChat, createChat, markMessagesAsRead };
